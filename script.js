@@ -103,18 +103,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // EDYTUJ TU: pliki i opisy dla każdego auta w porównaniu mrożenia
     const FROST_CARS = {
       bentley: {
-        after: 'assets/frost-after.jpg',
-        before: 'assets/frost-before.jpg',
+        after: 'frost-after.jpg',
+        before: 'frost-before.jpg',
         caption: 'Bentley Bentayga — zmiana wykończenia lakieru z połysku na mat (frost), zabieg w pełni odwracalny.'
       },
       lexus: {
-        after: 'assets/frost-lexus-after.jpg',
-        before: 'assets/frost-lexus-before.jpg',
+        after: 'frost-lexus-after.jpg',
+        before: 'frost-lexus-before.jpg',
         caption: 'Lexus LC 500 Cabrio — zmiana wykończenia lakieru z połysku na mat (frost), zabieg w pełni odwracalny.'
       },
       bmw: {
-        after: 'assets/frost-bmw-after.jpg',
-        before: 'assets/frost-bmw-before.jpg',
+        after: 'frost-bmw-after.jpg',
+        before: 'frost-bmw-before.jpg',
         caption: 'BMW X7 — zmiana wykończenia lakieru z połysku na mat (frost), zabieg w pełni odwracalny.'
       }
     };
