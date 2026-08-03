@@ -1,5 +1,5 @@
 /* =========================================================
-   POZIOM STUDIO — design tokens
+   POZIOM STUDIO â€” design tokens
    ========================================================= */
 :root{
   --bg:            #0a0a0b;
@@ -115,7 +115,7 @@ input,textarea{ font-family:inherit; }
   line-height:1.15;
 }
 
-/* scroll reveal — hidden pre-state only applies once JS confirms it can reveal it again */
+/* scroll reveal â€” hidden pre-state only applies once JS confirms it can reveal it again */
 .js .reveal{
   opacity:0;
   transform:translateY(22px);
