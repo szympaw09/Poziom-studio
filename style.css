@@ -1,738 +1,569 @@
-/* =========================================================
-   POZIOM STUDIO â€” design tokens
-   ========================================================= */
-:root{
-  --bg:            #0a0a0b;
-  --bg-soft:       #101012;
-  --bg-card:       #16161a;
-  --line:          #262629;
+// =========================================================
+// POZIOM STUDIO — interactions
+// =========================================================
+document.addEventListener('DOMContentLoaded', () => {
 
-  --gold:          #d9a94a;
-  --gold-bright:   #f4cc72;
-  --gold-dim:      #8a6c2f;
+  /* ---------- Sticky header ---------- */
+  const header = document.getElementById('siteHeader');
+  const onScroll = () => {
+    header.classList.toggle('scrolled', window.scrollY > 30);
+  };
+  onScroll();
+  window.addEventListener('scroll', onScroll, { passive: true });
 
-  --neon-white:    #f3f5f8;
-  --neon-white-glow: #cfe7ff;
+  /* ---------- Mobile nav ---------- */
+  const navToggle = document.getElementById('navToggle');
+  const mobileNav = document.getElementById('mobileNav');
+  navToggle.addEventListener('click', () => {
+    const isOpen = mobileNav.classList.toggle('open');
+    navToggle.classList.toggle('open', isOpen);
+    navToggle.setAttribute('aria-expanded', String(isOpen));
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+  });
+  mobileNav.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      mobileNav.classList.remove('open');
+      navToggle.classList.remove('open');
+      navToggle.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+    });
+  });
 
-  --ink:           #ece9e2;
-  --ink-dim:       #a8a49b;
-  --ink-faint:     #6e6b64;
+  /* ---------- Scroll reveal ---------- */
+  const revealEls = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+    revealEls.forEach(el => io.observe(el));
+  } else {
+    revealEls.forEach(el => el.classList.add('is-visible'));
+  }
 
-  --radius:        2px;
-  --radius-lg:     6px;
+  /* ---------- Before / After slider ---------- */
+  const ba = document.getElementById('baSlider');
+  if (ba) {
+    const handle = ba.querySelector('.ba-handle');
+    let dragging = false;
 
-  --ease: cubic-bezier(.22,.68,0,1);
-}
+    const setPos = (clientX) => {
+      const rect = ba.getBoundingClientRect();
+      let pct = ((clientX - rect.left) / rect.width) * 100;
+      pct = Math.max(0, Math.min(100, pct));
+      ba.style.setProperty('--pos', pct + '%');
+      handle.style.left = pct + '%';
+    };
 
-/* =========================================================
-   RESET
-   ========================================================= */
-*,*::before,*::after{ box-sizing:border-box; }
-html{ scroll-behavior:smooth; }
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--ink);
-  font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;
-  font-size:16px;
-  line-height:1.6;
-  -webkit-font-smoothing:antialiased;
-}
-img{ max-width:100%; display:block; }
-a{ color:inherit; text-decoration:none; }
-ul{ list-style:none; margin:0; padding:0; }
-h1,h2,h3{ font-family:'Rajdhani',sans-serif; font-weight:700; margin:0; letter-spacing:.01em; }
-p{ margin:0; }
-button{ font-family:inherit; cursor:pointer; }
-input,textarea{ font-family:inherit; }
+    const start = (e) => {
+      dragging = true;
+      setPos(e.touches ? e.touches[0].clientX : e.clientX);
+    };
+    const move = (e) => {
+      if (!dragging) return;
+      setPos(e.touches ? e.touches[0].clientX : e.clientX);
+    };
+    const end = () => { dragging = false; };
 
-:focus-visible{ outline:2px solid var(--gold-bright); outline-offset:3px; }
+    ba.addEventListener('mousedown', start);
+    ba.addEventListener('touchstart', start, { passive: true });
+    window.addEventListener('mousemove', move);
+    window.addEventListener('touchmove', move, { passive: true });
+    window.addEventListener('mouseup', end);
+    window.addEventListener('touchend', end);
 
-@media (prefers-reduced-motion: reduce){
-  *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important; }
-}
+    // click anywhere on the strip to jump
+    ba.addEventListener('click', (e) => setPos(e.clientX));
 
-/* =========================================================
-   UTILITIES
-   ========================================================= */
-.eyebrow{
-  font-family:'JetBrains Mono',monospace;
-  font-size:.72rem;
-  letter-spacing:.22em;
-  text-transform:uppercase;
-  color:var(--gold);
-  margin:0 0 .9rem;
-}
-.gold-text{ color:var(--gold-bright); }
+    // keyboard support
+    ba.setAttribute('tabindex', '0');
+    ba.setAttribute('role', 'slider');
+    ba.setAttribute('aria-label', 'Suwak porównania przed i po mrożeniu lakieru');
+    ba.addEventListener('keydown', (e) => {
+      const current = parseFloat(getComputedStyle(ba).getPropertyValue('--pos')) || 50;
+      const rect = ba.getBoundingClientRect();
+      if (e.key === 'ArrowLeft') setPos(rect.left + (rect.width * (current - 5) / 100));
+      if (e.key === 'ArrowRight') setPos(rect.left + (rect.width * (current + 5) / 100));
+    });
 
-.btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:.5em;
-  padding:.95rem 1.9rem;
-  border-radius:var(--radius);
-  font-family:'Rajdhani',sans-serif;
-  font-weight:600;
-  font-size:1rem;
-  letter-spacing:.04em;
-  text-transform:uppercase;
-  border:1px solid transparent;
-  transition:transform .25s var(--ease), box-shadow .25s var(--ease), background .25s var(--ease), border-color .25s var(--ease);
-}
-.btn-gold{
-  background:linear-gradient(180deg,var(--gold-bright),var(--gold));
-  color:#161208;
-  box-shadow:0 0 0 rgba(217,169,74,0);
-}
-.btn-gold:hover{
-  box-shadow:0 0 26px rgba(217,169,74,.45);
-  transform:translateY(-1px);
-}
-.btn-ghost{
-  background:transparent;
-  color:var(--neon-white);
-  border-color:rgba(243,245,248,.35);
-}
-.btn-ghost:hover{
-  border-color:var(--neon-white);
-  box-shadow:0 0 18px rgba(207,231,255,.25);
-}
-.btn-sm{ padding:.6rem 1.3rem; font-size:.85rem; }
-.btn-full{ width:100%; }
+    // reset to center helper (used when switching cars)
+    ba.resetPos = () => {
+      ba.style.setProperty('--pos', '50%');
+      handle.style.left = '50%';
+    };
+  }
 
-.section{
-  max-width:1240px;
-  margin:0 auto;
-  padding:6.5rem 1.5rem;
-}
-.section-head{
-  max-width:640px;
-  margin:0 0 3.2rem;
-}
-.section-head h2{
-  font-size:clamp(1.7rem,3.4vw,2.5rem);
-  line-height:1.15;
-}
+  /* ---------- Samoregeneracja PPF ---------- */
+  const healBtn = document.getElementById('healBtn');
+  const healPanel = document.getElementById('healPanel');
+  if (healBtn && healPanel) {
+    let healed = false;
+    healBtn.addEventListener('click', () => {
+      if (!healed) {
+        healPanel.classList.add('healing');
+        healPanel.classList.add('healed');
+        healed = true;
+        healBtn.textContent = 'Zresetuj panel';
+      } else {
+        healPanel.classList.remove('healing');
+        healPanel.classList.remove('healed');
+        healed = false;
+        healBtn.textContent = '🔥 Aktywuj samoregenerację (Użyj ciepła)';
+        // wymuś reflow, aby animacja mogła wystartować od nowa przy kolejnym kliknięciu
+        void healPanel.offsetWidth;
+      }
+    });
+  }
 
-/* scroll reveal â€” hidden pre-state only applies once JS confirms it can reveal it again */
-.js .reveal{
-  opacity:0;
-  transform:translateY(22px);
-  transition:opacity .8s var(--ease), transform .8s var(--ease);
-}
-.reveal.is-visible{ opacity:1; transform:translateY(0); }
+  /* ---------- Interaktywna lupa ---------- */
+  const loupeWrap = document.getElementById('loupeWrap');
+  if (loupeWrap) {
+    const loupeImg = document.getElementById('loupeImg');
+    const loupeGlass = document.getElementById('loupeGlass');
+    const ZOOM = 2.5;
 
-/* =========================================================
-   HEADER
-   ========================================================= */
-.site-header{
-  position:fixed; top:0; left:0; right:0; z-index:100;
-  background:linear-gradient(180deg,rgba(10,10,11,.85),rgba(10,10,11,0));
-  transition:background .35s var(--ease), backdrop-filter .35s var(--ease), border-color .35s var(--ease);
-  border-bottom:1px solid transparent;
-}
-.site-header.scrolled{
-  background:rgba(10,10,11,.86);
-  backdrop-filter:blur(10px);
-  border-bottom-color:var(--line);
-}
-.header-inner{
-  max-width:1320px; margin:0 auto;
-  display:flex; align-items:center; justify-content:space-between;
-  padding:1.1rem 1.5rem;
-}
-.brand{ display:flex; align-items:center; }
-.brand-logo{ height:30px; width:auto; display:block; }
+    const positionGlass = (clientX, clientY) => {
+      const rect = loupeWrap.getBoundingClientRect();
+      let x = clientX - rect.left;
+      let y = clientY - rect.top;
+      x = Math.max(0, Math.min(x, rect.width));
+      y = Math.max(0, Math.min(y, rect.height));
 
-.main-nav{ display:flex; gap:1.5rem; }
-.main-nav a{
-  font-family:'Rajdhani',sans-serif; font-weight:600; font-size:.95rem;
-  letter-spacing:.03em; color:var(--ink-dim);
-  position:relative; padding:.3rem 0;
-  transition:color .25s;
-}
-.main-nav a::after{
-  content:''; position:absolute; left:0; right:100%; bottom:-2px; height:1px;
-  background:var(--gold); transition:right .3s var(--ease);
-}
-.main-nav a:hover{ color:var(--neon-white); }
-.main-nav a:hover::after{ right:0; }
+      const glassSize = loupeGlass.offsetWidth;
+      loupeGlass.style.left = (x - glassSize / 2) + 'px';
+      loupeGlass.style.top = (y - glassSize / 2) + 'px';
+      loupeGlass.style.backgroundImage = `url(${loupeImg.currentSrc || loupeImg.src})`;
+      loupeGlass.style.backgroundSize = (rect.width * ZOOM) + 'px ' + (rect.height * ZOOM) + 'px';
+      loupeGlass.style.backgroundPosition = `-${x * ZOOM - glassSize / 2}px -${y * ZOOM - glassSize / 2}px`;
+    };
 
-.header-actions{ display:flex; align-items:center; gap:1rem; }
-.nav-toggle{ display:none; flex-direction:column; gap:5px; background:none; border:none; padding:6px; }
-.nav-toggle span{ width:22px; height:2px; background:var(--neon-white); transition:transform .3s, opacity .3s; }
-.nav-toggle.open span:nth-child(1){ transform:translateY(7px) rotate(45deg); }
-.nav-toggle.open span:nth-child(2){ opacity:0; }
-.nav-toggle.open span:nth-child(3){ transform:translateY(-7px) rotate(-45deg); }
+    loupeWrap.addEventListener('mouseenter', () => loupeWrap.classList.add('active'));
+    loupeWrap.addEventListener('mouseleave', () => loupeWrap.classList.remove('active'));
+    loupeWrap.addEventListener('mousemove', (e) => positionGlass(e.clientX, e.clientY));
 
-.mobile-nav{
-  position:fixed; inset:0 0 auto 0; top:0; z-index:99;
-  background:rgba(8,8,9,.98);
-  padding:6.5rem 1.8rem 2rem;
-  display:flex; flex-direction:column; gap:1.6rem;
-  transform:translateY(-100%);
-  transition:transform .4s var(--ease);
-}
-.mobile-nav.open{ transform:translateY(0); }
-.mobile-nav a{
-  font-family:'Rajdhani',sans-serif; font-size:1.4rem; font-weight:600; color:var(--ink);
-  border-bottom:1px solid var(--line); padding-bottom:1rem;
-}
-.mobile-nav .btn{ margin-top:1rem; align-self:flex-start; }
+    loupeWrap.addEventListener('touchstart', (e) => {
+      loupeWrap.classList.add('active');
+      const t = e.touches[0];
+      if (t) positionGlass(t.clientX, t.clientY);
+    }, { passive: true });
+    loupeWrap.addEventListener('touchmove', (e) => {
+      const t = e.touches[0];
+      if (t) positionGlass(t.clientX, t.clientY);
+    }, { passive: true });
+    loupeWrap.addEventListener('touchend', () => loupeWrap.classList.remove('active'));
 
-/* =========================================================
-   HERO
-   ========================================================= */
-.hero{
-  position:relative;
-  height:100svh; min-height:620px;
-  display:flex; align-items:flex-end;
-  overflow:hidden;
-}
-.hero-media{ position:absolute; inset:0; }
-.hero-media img{
-  width:100%; height:100%; object-fit:cover; object-position:50% 15%;
-}
-.hero-gradient{
-  position:absolute; inset:0;
-  background:
-    linear-gradient(180deg, rgba(8,8,9,.35) 0%, rgba(8,8,9,.25) 35%, rgba(8,8,9,.85) 78%, #0a0a0b 100%),
-    linear-gradient(90deg, rgba(8,8,9,.55) 0%, rgba(8,8,9,0) 45%);
-}
-.hero-content{
-  position:relative; z-index:2;
-  max-width:760px;
-  padding:0 1.5rem 5.5rem;
-  margin:0 auto; width:100%;
-}
-.hero-title{
-  font-size:clamp(2.4rem,6vw,4.2rem);
-  line-height:1.04;
-  color:var(--neon-white);
-  text-shadow:0 0 26px rgba(207,231,255,.18);
-  margin-bottom:1.3rem;
-}
-.flicker{ animation:neonFlicker 2.4s ease-out 1; }
-@keyframes neonFlicker{
-  0%{ opacity:0; }
-  6%{ opacity:1; }
-  8%{ opacity:.3; }
-  10%{ opacity:1; }
-  20%{ opacity:.4; }
-  24%{ opacity:1; }
-  100%{ opacity:1; }
-}
-.hero-sub{
-  font-size:1.08rem; color:var(--ink-dim); max-width:520px; margin-bottom:2.2rem;
-}
-.hero-cta{ display:flex; gap:1rem; flex-wrap:wrap; }
+    const loupeMobileBtn = document.getElementById('loupeMobileBtn');
+    if (loupeMobileBtn) {
+      loupeMobileBtn.addEventListener('click', () => {
+        const isActive = loupeWrap.classList.toggle('active');
+        if (isActive) {
+          const rect = loupeWrap.getBoundingClientRect();
+          positionGlass(rect.left + rect.width / 2, rect.top + rect.height / 2);
+          loupeMobileBtn.textContent = 'Zmniejsz';
+        } else {
+          loupeMobileBtn.textContent = 'Powiększ detale';
+        }
+      });
+    }
+  }
 
-.scroll-cue{
-  position:absolute; left:50%; bottom:1.6rem; transform:translateX(-50%);
-  width:26px; height:42px; border:1px solid rgba(243,245,248,.4); border-radius:20px;
-  z-index:2;
-}
-.scroll-cue span{
-  position:absolute; top:7px; left:50%; width:4px; height:8px; margin-left:-2px;
-  background:var(--gold-bright); border-radius:2px;
-  animation:scrollCue 1.8s infinite;
-}
-@keyframes scrollCue{
-  0%{ opacity:1; transform:translateY(0); }
-  70%{ opacity:0; transform:translateY(14px); }
-  100%{ opacity:0; }
-}
+  /* ---------- FAQ akordeon ---------- */
+  const faqList = document.getElementById('faqList');
+  if (faqList) {
+    const questions = Array.from(faqList.querySelectorAll('.faq-question'));
+    questions.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const answer = document.getElementById(btn.getAttribute('aria-controls'));
+        const isOpen = btn.getAttribute('aria-expanded') === 'true';
+        // zamknij pozostałe (akordeon - jedno pytanie na raz)
+        questions.forEach(other => {
+          if (other !== btn) {
+            other.setAttribute('aria-expanded', 'false');
+            const otherAnswer = document.getElementById(other.getAttribute('aria-controls'));
+            if (otherAnswer) otherAnswer.hidden = true;
+          }
+        });
+        btn.setAttribute('aria-expanded', String(!isOpen));
+        if (answer) answer.hidden = isOpen;
+      });
+    });
+  }
 
-/* =========================================================
-   MARQUEE
-   ========================================================= */
-.marquee{
-  border-top:1px solid var(--line); border-bottom:1px solid var(--line);
-  background:var(--bg-soft);
-  overflow:hidden;
-  padding:1.1rem 0;
-}
-.marquee-track{
-  display:flex; width:max-content; gap:1.4rem; align-items:center;
-  animation:marqueeScroll 32s linear infinite;
-}
-.marquee:hover .marquee-track{ animation-play-state:paused; }
-.marquee-track span{
-  font-family:'Rajdhani',sans-serif; font-weight:600; font-size:1rem;
-  letter-spacing:.16em; color:var(--ink-faint); white-space:nowrap;
-}
-.marquee-track i{ font-style:normal; color:var(--gold-dim); font-size:.8rem; }
-@keyframes marqueeScroll{
-  from{ transform:translateX(0); }
-  to{ transform:translateX(-50%); }
-}
+  /* ---------- Wybór auta do porównania mrożenia ---------- */
+  const frostCarSelect = document.getElementById('frostCarSelect');
+  if (frostCarSelect && ba) {
+    // EDYTUJ TU: pliki i opisy dla każdego auta w porównaniu mrożenia
+    const FROST_CARS = {
+      bentley: {
+        after: 'frost-after.jpg',
+        before: 'frost-before.jpg',
+        caption: 'Bentley Bentayga — zmiana wykończenia lakieru z połysku na mat (frost), zabieg w pełni odwracalny.'
+      },
+      lexus: {
+        after: 'frost-lexus-after.jpg',
+        before: 'frost-lexus-before.jpg',
+        caption: 'Lexus LC 500 Cabrio — zmiana wykończenia lakieru z połysku na mat (frost), zabieg w pełni odwracalny.'
+      },
+      bmw: {
+        after: 'frost-bmw-after.jpg',
+        before: 'frost-bmw-before.jpg',
+        caption: 'BMW X7 — zmiana wykończenia lakieru z połysku na mat (frost), zabieg w pełni odwracalny.'
+      },
+      mercedes: {
+        after: 'frost-mercedes-after.jpg',
+        before: 'frost-mercedes-before.jpg',
+        caption: 'Mercedes CLA — zmiana koloru nadwozia folią, bez lakierowania i w pełni odwracalnie.'
+      },
+      defender: {
+        after: 'frost-defender-after.jpg',
+        before: 'frost-defender-before.jpg',
+        caption: 'Land Rover Defender — folia bezbarwna PPF. Efekt celowo niewidoczny: folia chroni lakier, nie zmieniając wyglądu auta.'
+      }
+    };
 
-/* =========================================================
-   SERVICES
-   ========================================================= */
-.services-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
-  gap:1px;
-  background:var(--line);
-  border:1px solid var(--line);
-}
-.service-card{
-  background:var(--bg);
-  padding:2.4rem 2rem;
-  transition:background .3s var(--ease);
-}
-.service-card:hover{ background:var(--bg-card); }
-.service-icon{
-  width:44px; height:44px; margin-bottom:1.4rem; color:var(--gold);
-  transition:color .3s, filter .3s;
-}
-.service-card:hover .service-icon{ color:var(--gold-bright); filter:drop-shadow(0 0 8px rgba(244,204,114,.5)); }
-.service-icon svg{ width:100%; height:100%; }
-.service-card h3{ font-size:1.2rem; margin-bottom:.7rem; color:var(--neon-white); }
-.service-card p{ color:var(--ink-dim); font-size:.94rem; }
+    const afterImg = document.getElementById('baAfterImg');
+    const beforeImg = document.getElementById('baBeforeImg');
+    const caption = document.getElementById('frostCaption');
+    const carChips = Array.from(frostCarSelect.querySelectorAll('.chip'));
 
-/* =========================================================
-   STUDIO / SLOW
-   ========================================================= */
-.studio{ background:var(--bg-soft); max-width:none; padding-left:0; padding-right:0; }
-.studio-grid{
-  max-width:1240px; margin:0 auto; padding:0 1.5rem;
-  display:grid; grid-template-columns:1fr 1fr; gap:4rem; align-items:center;
-}
-.studio-text h2{ font-size:clamp(1.7rem,3.2vw,2.3rem); margin-bottom:1.3rem; max-width:480px; }
-.studio-lead{ color:var(--ink-dim); margin-bottom:2rem; max-width:480px; }
-.studio-points{ margin-bottom:2.2rem; display:flex; flex-direction:column; gap:1rem; }
-.studio-points li{
-  display:flex; align-items:baseline; gap:1rem;
-  font-family:'Rajdhani',sans-serif; font-size:1.05rem; color:var(--ink);
-  border-bottom:1px solid var(--line); padding-bottom:1rem;
-}
-.studio-points span{
-  font-family:'JetBrains Mono',monospace; color:var(--gold); font-size:.85rem;
-}
-.studio-media{ position:relative; }
-.studio-media img{ width:100%; aspect-ratio:4/5; object-fit:cover; border-radius:var(--radius-lg); }
-.studio-media-frame{
-  position:absolute; inset:-14px -14px auto auto; top:auto; bottom:-14px; left:-14px;
-  width:80px; height:80px;
-  border-left:2px solid var(--gold); border-bottom:2px solid var(--gold);
-  pointer-events:none;
-}
+    carChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        const car = FROST_CARS[chip.dataset.car];
+        if (!car) return;
+        carChips.forEach(c => c.classList.toggle('active', c === chip));
+        afterImg.src = car.after;
+        beforeImg.src = car.before;
+        caption.textContent = car.caption;
+        if (ba.resetPos) ba.resetPos();
+      });
+    });
+  }
 
-/* =========================================================
-   BEFORE / AFTER SLIDER
-   ========================================================= */
-.frost{ text-align:left; }
-.frost-desc{ color:var(--ink-dim); margin-top:1rem; max-width:560px; }
-.car-select{ display:flex; flex-wrap:wrap; gap:.6rem; margin:1.8rem 0 1.6rem; }
-.car-select .chip em{ font-style:normal; opacity:.65; font-size:.85em; margin-left:.3em; }
-.ba{
-  position:relative;
-  width:100%;
-  aspect-ratio:3/2;
-  max-height:640px;
-  overflow:hidden;
-  border-radius:var(--radius-lg);
-  border:1px solid var(--line);
-  user-select:none;
-  cursor:ew-resize;
-  touch-action:pan-y;
-}
-.ba-img{
-  position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
-  pointer-events:none;
-}
-.ba-before{
-  clip-path: inset(0 calc(100% - var(--pos)) 0 0);
-}
-.ba-badge{
-  position:absolute; top:1.1rem;
-  font-family:'JetBrains Mono',monospace; font-size:.72rem; letter-spacing:.18em;
-  padding:.4rem .8rem; background:rgba(10,10,11,.55); backdrop-filter:blur(4px);
-  color:var(--neon-white); border:1px solid rgba(243,245,248,.3); border-radius:2px;
-  pointer-events:none; z-index:3;
-}
-.ba-badge-left{ left:1.1rem; }
-.ba-badge-right{ right:1.1rem; }
-.ba-handle{
-  position:absolute; top:0; bottom:0; width:0;
-  transform:translateX(-50%);
-  z-index:4; pointer-events:none;
-}
-.ba-handle::before{
-  content:''; position:absolute; top:0; bottom:0; left:50%; width:2px; transform:translateX(-50%);
-  background:var(--gold-bright); box-shadow:0 0 12px rgba(244,204,114,.7);
-}
-.ba-handle-knob{
-  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-  width:46px; height:46px; border-radius:50%;
-  background:linear-gradient(180deg,var(--gold-bright),var(--gold));
-  color:#161208; display:flex; align-items:center; justify-content:center;
-  font-family:'Rajdhani',sans-serif; font-weight:700; font-size:.8rem; letter-spacing:.05em;
-  box-shadow:0 0 20px rgba(244,204,114,.55), 0 4px 14px rgba(0,0,0,.4);
-}
-.frost-caption{ margin-top:1.2rem; color:var(--ink-faint); font-size:.88rem; }
+  /* ---------- Gallery lightbox ---------- */
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const lightboxCaption = document.getElementById('lightboxCaption');
+  const lightboxClose = document.getElementById('lightboxClose');
 
-/* =========================================================
-   GALLERY
-   ========================================================= */
-.gallery{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  grid-auto-rows:180px;
-  grid-auto-flow:dense;
-  gap:.6rem;
-}
-.gallery-item{
-  position:relative; overflow:hidden; border-radius:var(--radius);
-  background:none; border:none; padding:0; display:block;
-}
-.gallery-item img{
-  width:100%; height:100%; object-fit:cover;
-  transition:transform .6s var(--ease), filter .4s;
-  filter:saturate(.9) brightness(.92);
-}
-.gallery-item:hover img{ transform:scale(1.06); filter:saturate(1.05) brightness(1); }
-.gallery-item::after{
-  content:attr(data-caption);
-  position:absolute; left:0; right:0; bottom:0;
-  padding:.9rem 1rem 1rem;
-  font-family:'Rajdhani',sans-serif; font-size:.85rem; font-weight:600; color:var(--neon-white);
-  background:linear-gradient(0deg,rgba(8,8,9,.92),rgba(8,8,9,0));
-  opacity:0; transform:translateY(8px);
-  transition:opacity .3s var(--ease), transform .3s var(--ease);
-}
-.gallery-item:hover::after{ opacity:1; transform:translateY(0); }
-.span-wide{ grid-column:span 2; }
-.span-tall{ grid-row:span 2; }
+  document.querySelectorAll('.gallery-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const img = item.querySelector('img');
+      lightboxImg.src = img.src;
+      lightboxImg.alt = img.alt;
+      lightboxCaption.textContent = item.dataset.caption || '';
+      lightbox.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    });
+  });
 
-/* =========================================================
-   CONTACT
-   ========================================================= */
-.contact-grid{
-  display:grid; grid-template-columns:1fr 1fr; gap:4rem;
-  margin-bottom:3.5rem;
-}
-.contact-info h2{ font-size:clamp(1.7rem,3.2vw,2.3rem); margin:.4rem 0 1.1rem; }
-.contact-lead{ color:var(--ink-dim); max-width:440px; margin-bottom:2.2rem; }
-.contact-list{ display:flex; flex-direction:column; gap:1.2rem; margin-bottom:2rem; }
-.contact-list li{
-  display:grid; grid-template-columns:110px 1fr; gap:1rem;
-  border-bottom:1px solid var(--line); padding-bottom:1.1rem;
-  font-size:.98rem;
-}
-.contact-list a:hover{ color:var(--gold-bright); }
-.contact-label{
-  font-family:'JetBrains Mono',monospace; font-size:.72rem; letter-spacing:.14em;
-  text-transform:uppercase; color:var(--gold); padding-top:.2rem;
-}
-.social-row{ display:flex; gap:.9rem; }
-.social-row a{
-  width:42px; height:42px; border:1px solid var(--line); border-radius:50%;
-  display:flex; align-items:center; justify-content:center; color:var(--ink-dim);
-  transition:color .25s, border-color .25s, box-shadow .25s;
-}
-.social-row svg{ width:19px; height:19px; }
-.social-row a:hover{ color:var(--gold-bright); border-color:var(--gold); box-shadow:0 0 14px rgba(217,169,74,.3); }
+  const closeLightbox = () => {
+    lightbox.classList.remove('open');
+    document.body.style.overflow = '';
+  };
+  lightboxClose.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
+  window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
 
-.contact-form{
-  background:var(--bg-card); border:1px solid var(--line); border-radius:var(--radius-lg);
-  padding:2.2rem;
-  display:flex; flex-direction:column; gap:1.2rem;
-}
-.form-row{ display:flex; flex-direction:column; gap:.5rem; }
-.form-row label{
-  font-family:'JetBrains Mono',monospace; font-size:.7rem; letter-spacing:.12em;
-  text-transform:uppercase; color:var(--ink-faint);
-}
-.form-row input, .form-row textarea{
-  background:var(--bg-soft); border:1px solid var(--line); border-radius:var(--radius);
-  color:var(--ink); padding:.8rem .9rem; font-size:.95rem; resize:vertical;
-  transition:border-color .25s;
-}
-.form-row input:focus, .form-row textarea:focus{ border-color:var(--gold); outline:none; }
-.form-note{ font-size:.78rem; color:var(--ink-faint); text-align:center; }
-.form-note.error{ color:#e0745a; }
-.form-honeypot{ position:absolute; left:-9999px; width:1px; height:1px; opacity:0; pointer-events:none; }
-.form-note.success{ color:var(--gold-bright); }
+  /* ---------- Contact form (Web3Forms — wysyłka bez przeładowania strony) ---------- */
+  const form = document.getElementById('contactForm');
+  const formNote = document.getElementById('formNote');
+  const submitBtn = document.getElementById('contactSubmitBtn');
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
 
-.map-wrap{ position:relative; border:1px solid var(--line); border-radius:var(--radius-lg); overflow:hidden; }
-.map-wrap iframe{ width:100%; height:400px; border:0; display:block; filter:grayscale(.3) contrast(1.1); }
-.map-cta{
-  position:absolute; right:1.2rem; bottom:1.2rem;
-  background:rgba(10,10,11,.85); backdrop-filter:blur(6px);
-  border:1px solid var(--gold); color:var(--gold-bright);
-  padding:.65rem 1.2rem; border-radius:2px;
-  font-family:'Rajdhani',sans-serif; font-weight:600; letter-spacing:.03em; font-size:.9rem;
-  transition:background .25s;
-}
-.map-cta:hover{ background:rgba(217,169,74,.15); }
+      // prosty honeypot antyspamowy — jeśli wypełniony, to bot
+      if (form.botcheck && form.botcheck.value) return;
 
-/* =========================================================
-   FOOTER
-   ========================================================= */
-.site-footer{ border-top:1px solid var(--line); background:var(--bg-soft); }
-.footer-inner{
-  max-width:1240px; margin:0 auto; padding:3rem 1.5rem 2rem;
-  display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:2rem;
-}
-.footer-brand{ opacity:.9; }
-.footer-brand .brand-logo{ height:26px; }
-.footer-nav{ display:flex; gap:1.8rem; flex-wrap:wrap; }
-.footer-nav a{ font-family:'Rajdhani',sans-serif; font-weight:600; font-size:.92rem; color:var(--ink-dim); }
-.footer-nav a:hover{ color:var(--gold-bright); }
-.footer-social{ display:flex; gap:.8rem; }
-.footer-social a{
-  width:38px; height:38px; border:1px solid var(--line); border-radius:50%;
-  display:flex; align-items:center; justify-content:center; color:var(--ink-dim);
-}
-.footer-social svg{ width:17px; height:17px; }
-.footer-social a:hover{ color:var(--gold-bright); border-color:var(--gold); }
-.footer-bottom{
-  max-width:1240px; margin:0 auto; padding:0 1.5rem 2.2rem;
-  display:flex; flex-wrap:wrap; justify-content:space-between; gap:.6rem;
-  font-family:'JetBrains Mono',monospace; font-size:.72rem; color:var(--ink-faint);
-}
+      const accessKey = form.access_key ? form.access_key.value : '';
+      const name = form.name.value.trim();
+      const contact = form.contact.value.trim();
+      const car = form.car.value.trim();
+      const message = form.message.value.trim();
 
-/* =========================================================
-   LIGHTBOX
-   ========================================================= */
-.lightbox{
-  position:fixed; inset:0; z-index:200;
-  background:rgba(6,6,7,.95);
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  gap:1.2rem; padding:2rem;
-  opacity:0; visibility:hidden;
-  transition:opacity .3s var(--ease);
-}
-.lightbox.open{ opacity:1; visibility:visible; }
-.lightbox img{ max-width:min(90vw,1100px); max-height:78vh; object-fit:contain; border-radius:var(--radius); }
-.lightbox p{ color:var(--ink-dim); font-family:'Rajdhani',sans-serif; font-size:1rem; text-align:center; max-width:600px; }
-.lightbox-close{
-  position:absolute; top:1.6rem; right:1.8rem;
-  width:42px; height:42px; border-radius:50%; border:1px solid var(--line);
-  background:transparent; color:var(--neon-white); font-size:1.1rem;
-}
-.lightbox-close:hover{ border-color:var(--gold); color:var(--gold-bright); }
+      // Fallback: klucz Web3Forms nie został jeszcze wklejony — użyj mailto, żeby formularz działał od razu
+      if (!accessKey || accessKey.indexOf('WKLEJ_TU') === 0) {
+        const subject = encodeURIComponent(`Zapytanie ze strony — ${name}`);
+        const body = encodeURIComponent(
+          `Imię i nazwisko: ${name}\nKontakt: ${contact}\nAuto: ${car || '—'}\n\nWiadomość:\n${message}`
+        );
+        window.location.href = `mailto:kontakt@poziom-studio.pl?subject=${subject}&body=${body}`;
+        formNote.textContent = 'Otworzyliśmy program pocztowy z gotową wiadomością — wystarczy ją wysłać. (Podłącz Web3Forms, aby wysyłać bez tego kroku.)';
+        formNote.classList.remove('error');
+        formNote.classList.add('success');
+        return;
+      }
 
-/* =========================================================
-   KONFIGURATOR SECTION WRAPPER
-   ========================================================= */
-.konfigurator-section{ display:flex; flex-direction:column; gap:6.5rem; }
-.quiz-block h2, .calc-block h2{ font-size:clamp(1.6rem,3vw,2.2rem); max-width:640px; margin-bottom:2.4rem; }
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Wysyłanie…'; }
+      formNote.classList.remove('error', 'success');
+      formNote.textContent = 'Wysyłanie wiadomości…';
 
-/* =========================================================
-   QUIZ
-   ========================================================= */
-.quiz-card{
-  background:var(--bg-card); border:1px solid var(--line); border-radius:var(--radius-lg);
-  padding:2.6rem; max-width:640px;
-}
-.quiz-progress{ display:flex; gap:.5rem; margin-bottom:1.8rem; }
-.quiz-progress .dot{
-  width:26px; height:3px; background:var(--line); border-radius:2px; transition:background .3s;
-}
-.quiz-progress .dot.active{ background:var(--gold); box-shadow:0 0 8px rgba(217,169,74,.5); }
-.quiz-question{
-  font-family:'Rajdhani',sans-serif; font-size:1.3rem; font-weight:600; color:var(--neon-white);
-  margin-bottom:1.4rem;
-}
-.quiz-answers{ display:flex; flex-direction:column; gap:.7rem; }
-.quiz-answers button{
-  text-align:left; background:var(--bg-soft); border:1px solid var(--line); color:var(--ink);
-  padding:.9rem 1.2rem; border-radius:var(--radius); font-size:.96rem;
-  transition:border-color .25s, background .25s, transform .2s;
-}
-.quiz-answers button:hover{ border-color:var(--gold); background:rgba(217,169,74,.08); transform:translateX(3px); }
+      try {
+        const payload = {
+          access_key: accessKey,
+          subject: form.subject ? form.subject.value : 'Nowe zapytanie ze strony Poziom Studio',
+          from_name: form.from_name ? form.from_name.value : 'Formularz — Poziom Studio',
+          name,
+          contact,
+          car: car || '—',
+          message
+        };
+        const res = await fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
 
-.quiz-result h3{ font-size:1.6rem; color:var(--gold-bright); margin:.5rem 0 1rem; }
-.quiz-result p:not(.eyebrow){ color:var(--ink-dim); margin-bottom:1.8rem; }
-.quiz-result-actions{ display:flex; gap:1rem; flex-wrap:wrap; }
+        if (data.success) {
+          form.reset();
+          formNote.textContent = 'Dziękujemy! Wiadomość została wysłana — odezwiemy się najszybciej, jak to możliwe.';
+          formNote.classList.add('success');
+        } else {
+          throw new Error(data.message || 'Nieznany błąd wysyłki');
+        }
+      } catch (err) {
+        formNote.textContent = 'Nie udało się wysłać formularza. Zadzwoń lub napisz na kontakt@poziom-studio.pl.';
+        formNote.classList.add('error');
+      } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Wyślij zapytanie'; }
+      }
+    });
+  }
 
-/* =========================================================
-   KALKULATOR / KONFIGURATOR
-   ========================================================= */
-.calc-grid{
-  display:grid; grid-template-columns:260px 1fr; gap:3.5rem; align-items:start;
-}
-.calc-visual{ position:sticky; top:110px; display:flex; flex-direction:column; align-items:center; gap:1rem; }
-.car-diagram{ width:100%; max-width:220px; height:auto; }
-.car-body{ fill:rgba(243,245,248,.03); stroke:var(--line); stroke-width:2; transition:stroke .4s, fill .4s, filter .4s; }
-.car-body.full-active{ stroke:var(--gold-bright); fill:rgba(217,169,74,.06); filter:drop-shadow(0 0 10px rgba(244,204,114,.45)); }
-.car-wheel{ fill:#000; opacity:.55; }
-.car-roof{ fill:rgba(243,245,248,.05); stroke:var(--line); stroke-width:1.5; pointer-events:none; }
-.zone{ fill:transparent; stroke:transparent; transition:fill .3s, stroke .3s, filter .3s; }
-.zone.active{ fill:rgba(229,184,105,.5); stroke:#e5b869; stroke-width:1.5; filter:drop-shadow(0 0 6px rgba(229,184,105,.65)); }
-.calc-visual-caption{ font-size:.78rem; color:var(--ink-faint); text-align:center; }
+  /* ---------- Footer year ---------- */
+  const yearEl = document.getElementById('year');
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-.calc-group{ margin-bottom:1.8rem; }
-.calc-label{
-  display:block; font-family:'JetBrains Mono',monospace; font-size:.72rem; letter-spacing:.14em;
-  text-transform:uppercase; color:var(--gold); margin-bottom:.9rem;
-}
-.chip-row{ display:flex; flex-wrap:wrap; gap:.6rem; }
-.chip{
-  background:var(--bg-soft); border:1px solid var(--line); color:var(--ink-dim);
-  padding:.6rem 1.1rem; border-radius:20px; font-size:.88rem; font-family:'Rajdhani',sans-serif; font-weight:600;
-  transition:border-color .25s, color .25s, background .25s, box-shadow .25s;
-}
-.chip:hover{ border-color:var(--gold-dim); color:var(--ink); }
-.chip.active{
-  background:linear-gradient(180deg,var(--gold-bright),var(--gold)); color:#161208; border-color:transparent;
-  box-shadow:0 0 16px rgba(217,169,74,.4);
-}
-.chip-full{ border-style:dashed; }
-.calc-hint{ font-size:.82rem; color:var(--gold-bright); margin-top:.7rem; }
+  /* ---------- QUIZ: dobierz usługę ---------- */
+  const quizCard = document.getElementById('quizCard');
+  if (quizCard) {
+    const steps = Array.from(quizCard.querySelectorAll('.quiz-step'));
+    const dots = Array.from(quizCard.querySelectorAll('.quiz-progress .dot'));
+    const result = document.getElementById('quizResult');
+    const resultTitle = document.getElementById('quizResultTitle');
+    const resultDesc = document.getElementById('quizResultDesc');
+    const resultLink = document.getElementById('quizResultLink');
+    const restartBtn = document.getElementById('quizRestart');
 
-.calc-summary{
-  border-top:1px solid var(--line); padding-top:1.8rem; margin-top:.5rem;
-}
-.calc-price{ display:flex; flex-direction:column; gap:.3rem; margin-bottom:.6rem; }
-.calc-price-label{ font-family:'JetBrains Mono',monospace; font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-faint); }
-.calc-price-value{ font-family:'Rajdhani',sans-serif; font-size:1.9rem; font-weight:700; color:var(--neon-white); }
-.calc-disclaimer{ font-size:.8rem; color:var(--ink-faint); margin-bottom:1.3rem; }
+    // EDYTUJ TU: treści rekomendacji wyświetlanych po quizie
+    const SERVICE_INFO = {
+      ppf: {
+        title: 'Folie ochronne PPF',
+        desc: 'Przy Twoim stylu jeżdżenia priorytetem jest ochrona przed odpryskami i rysami — folia PPF to najlepsza inwestycja w trwały wygląd lakieru.'
+      },
+      detailing: {
+        title: 'Detailing',
+        desc: 'Najbardziej zależy Ci na czystości i pielęgnacji — pełny detailing wnętrza i karoserii odświeży auto od podstaw.'
+      },
+      rysy: {
+        title: 'Usuwanie rys',
+        desc: 'Korekta lakieru zredukuje mikrorysy i przywróci głębię koloru — idealne rozwiązanie dla auta w tym wieku.'
+      },
+      renowacja: {
+        title: 'Renowacja i polerowanie',
+        desc: 'Twój lakier zasługuje na pełną renowację — wielostopniowe polerowanie przywróci mu fabryczny, a czasem lepszy niż fabryczny, wygląd.'
+      },
+      mrozenie: {
+        title: 'Mrożenie lakieru',
+        desc: 'Skoro zależy Ci na wyróżniającym się wyglądzie na zlotach i wyjazdach — mrożenie da Twojemu autu głęboki, satynowy charakter.'
+      }
+    };
 
-/* =========================================================
-   QUICK CONTACT (floating)
-   ========================================================= */
-.quick-contact{ position:fixed; right:1.4rem; bottom:1.4rem; z-index:90; display:flex; flex-direction:column; align-items:flex-end; gap:.8rem; }
-.quick-contact-panel{
-  display:flex; flex-direction:column; gap:.6rem;
-  opacity:0; visibility:hidden; transform:translateY(10px);
-  transition:opacity .25s var(--ease), transform .25s var(--ease), visibility .25s;
-}
-.quick-contact.open .quick-contact-panel{ opacity:1; visibility:visible; transform:translateY(0); }
-.quick-contact-panel a{
-  display:flex; align-items:center; gap:.6rem;
-  background:rgba(16,16,18,.92); backdrop-filter:blur(8px);
-  border:1px solid var(--line); color:var(--ink);
-  padding:.7rem 1.1rem; border-radius:24px; font-family:'Rajdhani',sans-serif; font-weight:600; font-size:.9rem;
-  white-space:nowrap; box-shadow:0 6px 18px rgba(0,0,0,.35);
-  transition:border-color .25s, color .25s;
-}
-.quick-contact-panel a svg{ width:17px; height:17px; flex-shrink:0; }
-.quick-contact-panel a:hover{ border-color:var(--gold); color:var(--gold-bright); }
-.quick-contact-toggle{
-  width:56px; height:56px; border-radius:50%; border:none;
-  background:linear-gradient(180deg,var(--gold-bright),var(--gold));
-  color:#161208; display:flex; align-items:center; justify-content:center;
-  box-shadow:0 6px 22px rgba(217,169,74,.4);
-  transition:transform .25s var(--ease), box-shadow .25s;
-}
-.quick-contact-toggle:hover{ transform:scale(1.06); }
-.quick-contact-toggle svg{ width:24px; height:24px; }
-.quick-contact-toggle .icon-close{ display:none; }
-.quick-contact.open .quick-contact-toggle .icon-open{ display:none; }
-.quick-contact.open .quick-contact-toggle .icon-close{ display:block; }
+    let currentStep = 0;
+    const tally = { ppf: 0, detailing: 0, rysy: 0, renowacja: 0, mrozenie: 0 };
 
-/* =========================================================
-   FAQ
-   ========================================================= */
-.faq-list{ max-width:820px; }
-.faq-item{ border-bottom:1px solid var(--line); }
-.faq-q-heading{ margin:0; }
-.faq-question{
-  width:100%; display:flex; align-items:center; justify-content:space-between; gap:1.5rem;
-  background:none; border:none; text-align:left; cursor:pointer;
-  padding:1.4rem 0; font-family:'Rajdhani',sans-serif; font-size:1.12rem; font-weight:600; color:var(--neon-white);
-}
-.faq-question:hover{ color:var(--gold-bright); }
-.faq-icon{
-  position:relative; width:20px; height:20px; flex-shrink:0;
-}
-.faq-icon::before, .faq-icon::after{
-  content:''; position:absolute; top:50%; left:50%; background:var(--gold);
-  transition:transform .3s var(--ease), background .3s;
-}
-.faq-icon::before{ width:14px; height:2px; transform:translate(-50%,-50%); }
-.faq-icon::after{ width:2px; height:14px; transform:translate(-50%,-50%); }
-.faq-question[aria-expanded="true"] .faq-icon::after{ transform:translate(-50%,-50%) rotate(90deg) scale(0); }
-.faq-question[aria-expanded="true"] .faq-icon::before{ background:var(--gold-bright); }
-.faq-answer{
-  padding:0 0 1.5rem;
-  color:var(--ink-dim);
-  max-width:680px;
-}
-.faq-answer p{ margin:0 0 .9rem; }
-.faq-answer p:last-child{ margin-bottom:0; }
-.faq-list-items{ display:flex; flex-direction:column; gap:.5rem; margin:0; padding-left:1.2rem; }
-.faq-list-items li{ list-style:disc; }
+    const showStep = (i) => {
+      steps.forEach((s, idx) => { s.hidden = idx !== i; });
+      dots.forEach((d, idx) => d.classList.toggle('active', idx <= i));
+    };
 
-/* =========================================================
-   SAMOREGENERACJA PPF
-   ========================================================= */
-.heal-desc{ color:var(--ink-dim); margin-top:1rem; max-width:560px; }
-.heal-panel{
-  position:relative; width:100%; max-width:640px; aspect-ratio:5/3;
-  border-radius:var(--radius-lg); overflow:hidden; border:1px solid var(--line);
-  margin:2rem 0 1.6rem;
-  background:
-    radial-gradient(ellipse at 50% 32%, rgba(255,255,255,.10), rgba(255,255,255,0) 48%),
-    linear-gradient(160deg, #1c1c1f 0%, #0a0a0b 55%, #050506 100%);
-}
-.heal-scratches{ position:absolute; inset:0; transition:opacity 1.8s ease; }
-.heal-scratch-svg{ width:100%; height:100%; display:block; }
-.heal-scratch-svg path{ fill:none; stroke:rgba(255,255,255,.32); stroke-width:1.4; stroke-linecap:round; }
-.heal-panel.healed .heal-scratches{ opacity:0; }
-.heal-wave{
-  position:absolute; inset:0; left:-30%; width:30%;
-  background:linear-gradient(90deg, rgba(229,184,105,0) 0%, rgba(229,184,105,.6) 50%, rgba(229,184,105,0) 100%);
-  pointer-events:none; opacity:0; will-change:transform;
-}
-.heal-panel.healing .heal-wave{ animation:healSweep 1.8s ease forwards; }
-@keyframes healSweep{
-  0%{ opacity:1; transform:translateX(0%); }
-  92%{ opacity:1; }
-  100%{ opacity:0; transform:translateX(433%); }
-}
+    const showResult = () => {
+      let best = 'ppf', bestScore = -1;
+      Object.keys(tally).forEach(key => {
+        if (tally[key] > bestScore) { bestScore = tally[key]; best = key; }
+      });
+      const info = SERVICE_INFO[best];
+      resultTitle.textContent = info.title;
+      resultDesc.textContent = info.desc;
+      resultLink.setAttribute('href', '#realizacje');
+      quizCard.querySelector('.quiz-progress').hidden = true;
+      steps.forEach(s => { s.hidden = true; });
+      result.hidden = false;
+    };
 
-/* =========================================================
-   LUPA
-   ========================================================= */
-.loupe-desc{ color:var(--ink-dim); margin-top:1rem; max-width:560px; }
-.loupe-wrap{
-  position:relative; max-width:520px; border-radius:var(--radius-lg); overflow:hidden;
-  border:1px solid var(--line); margin:2rem 0 1rem;
-}
-.loupe-img{ width:100%; display:block; user-select:none; -webkit-user-drag:none; }
-.loupe-wrap.active{ cursor:none; }
-.loupe-glass{
-  position:absolute; width:150px; height:150px; border-radius:50%;
-  border:2px solid #e5b869; box-shadow:0 8px 26px rgba(0,0,0,.5), 0 0 0 4px rgba(229,184,105,.15);
-  background-repeat:no-repeat; pointer-events:none;
-  opacity:0; transition:opacity .15s ease; z-index:3;
-}
-.loupe-wrap.active .loupe-glass{ opacity:1; }
-.loupe-mobile-btn{ display:none; }
-@media (hover:none){
-  .loupe-mobile-btn{ display:inline-flex; }
-}
+    quizCard.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-service]');
+      if (!btn) return;
+      tally[btn.dataset.service] += 1;
+      if (currentStep < steps.length - 1) {
+        currentStep += 1;
+        showStep(currentStep);
+      } else {
+        showResult();
+      }
+    });
 
-/* =========================================================
-   RESPONSIVE
-   ========================================================= */
-@media (max-width:980px){
-  .main-nav{ display:none; }
-  .nav-toggle{ display:flex; }
-  .header-actions .btn-sm{ display:none; }
-  .studio-grid{ grid-template-columns:1fr; }
-  .studio-media{ order:-1; }
-  .contact-grid{ grid-template-columns:1fr; gap:2.6rem; }
-  .gallery{ grid-template-columns:repeat(2,1fr); grid-auto-rows:220px; }
-  .span-wide{ grid-column:span 2; }
-  .calc-grid{ grid-template-columns:1fr; }
-  .calc-visual{ position:static; max-width:200px; margin:0 auto; }
-}
-@media (max-width:560px){
-  .section{ padding:4.5rem 1.2rem; }
-  .hero-cta{ flex-direction:column; align-items:stretch; }
-  .gallery{ grid-template-columns:1fr 1fr; grid-auto-rows:170px; }
-  .contact-list li{ grid-template-columns:1fr; gap:.3rem; }
-  .ba-handle-knob{ width:38px; height:38px; font-size:.7rem; }
-  .quiz-card{ padding:1.8rem 1.4rem; }
-  .quick-contact{ right:1rem; bottom:1rem; }
-  .quick-contact-toggle{ width:50px; height:50px; }
-  .konfigurator-section{ gap:4.5rem; }
-}
+    restartBtn.addEventListener('click', () => {
+      Object.keys(tally).forEach(k => { tally[k] = 0; });
+      currentStep = 0;
+      result.hidden = true;
+      quizCard.querySelector('.quiz-progress').hidden = false;
+      showStep(0);
+    });
+  }
+
+  /* ---------- KALKULATOR / KONFIGURATOR PPF ---------- */
+  const calcBlock = document.getElementById('kalkulator');
+  if (calcBlock) {
+    // EDYTUJ TU: ceny orientacyjne (PLN) wg segmentu — wartości poglądowe do potwierdzenia
+    const SEGMENTS = {
+      kompakt: { label: 'Kompakt',       sensitive: 700, front: 1800, fullfront: 3400, fullbody: 8500,  frost: 4500 },
+      sedan:   { label: 'Sedan / Kombi', sensitive: 800, front: 2100, fullfront: 3900, fullbody: 9800,  frost: 5200 },
+      suv:     { label: 'SUV',           sensitive: 950, front: 2600, fullfront: 4600, fullbody: 12500, frost: 6500 },
+    };
+    const ZONE_LABELS = { sensitive: 'Elementy newralgiczne', front: 'Front', fullfront: 'Full Front', fullbody: 'Full Body' };
+
+    const segmentChips = Array.from(document.querySelectorAll('#segmentChips .chip'));
+    const zoneChips = Array.from(document.querySelectorAll('#zoneChips .chip'));
+    const frostChip = document.getElementById('frostChip');
+    const frostHint = document.getElementById('frostHint');
+    const priceEl = document.getElementById('calcPrice');
+    const calcCta = document.getElementById('calcCta');
+    const svgZones = Array.from(document.querySelectorAll('#carDiagram .zone'));
+    const carBody = document.getElementById('carBody');
+
+    let segment = null;
+    const selectedZones = new Set();
+    let frost = false;
+
+    const money = (n) => n.toLocaleString('pl-PL') + ' zł';
+
+    const isFull = () => selectedZones.has('fullbody');
+
+    const updateVisual = () => {
+      const fullOn = isFull();
+      carBody.classList.toggle('full-active', fullOn);
+      svgZones.forEach(z => {
+        const tokens = (z.dataset.zone || '').split(' ').filter(Boolean);
+        const on = fullOn || tokens.some(t => selectedZones.has(t));
+        z.classList.toggle('active', on);
+      });
+    };
+
+    const updateChips = () => {
+      segmentChips.forEach(c => c.classList.toggle('active', c.dataset.segment === segment));
+      const fullOn = isFull();
+      zoneChips.forEach(c => {
+        if (c.dataset.zone === 'fullbody') {
+          c.classList.toggle('active', fullOn);
+        } else {
+          c.classList.toggle('active', !fullOn && selectedZones.has(c.dataset.zone));
+        }
+      });
+      frostChip.classList.toggle('active', frost);
+      frostHint.hidden = !frost;
+    };
+
+    const updatePrice = () => {
+      if (!segment) { priceEl.textContent = 'wybierz segment i zakres'; return; }
+      const s = SEGMENTS[segment];
+      let base = 0;
+      if (isFull()) {
+        base = s.fullbody;
+      } else if (selectedZones.size > 0) {
+        selectedZones.forEach(z => { base += s[z] || 0; });
+      } else {
+        priceEl.textContent = 'wybierz zakres ochrony';
+        return;
+      }
+      if (frost) base += s.frost;
+      const low = Math.round(base / 50) * 50;
+      const high = Math.round((base * 1.15) / 50) * 50;
+      priceEl.textContent = `${money(low)} – ${money(high)}`;
+    };
+
+    const update = () => { updateChips(); updateVisual(); updatePrice(); };
+
+    segmentChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        segment = chip.dataset.segment;
+        update();
+      });
+    });
+
+    zoneChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        const zone = chip.dataset.zone;
+        if (zone === 'fullbody') {
+          if (isFull()) {
+            selectedZones.delete('fullbody');
+          } else {
+            selectedZones.clear();
+            selectedZones.add('fullbody');
+          }
+        } else {
+          selectedZones.delete('fullbody');
+          if (selectedZones.has(zone)) selectedZones.delete(zone);
+          else selectedZones.add(zone);
+        }
+        update();
+      });
+    });
+
+    frostChip.addEventListener('click', () => {
+      frost = !frost;
+      if (frost) {
+        selectedZones.clear();
+        selectedZones.add('fullbody');
+      }
+      update();
+    });
+
+    calcCta.addEventListener('click', () => {
+      const kontakt = document.getElementById('kontakt');
+      const msgEl = document.getElementById('f-msg');
+      const carEl = document.getElementById('f-car');
+      if (segment && msgEl) {
+        const s = SEGMENTS[segment];
+        const zoneList = isFull()
+          ? ['Full Body']
+          : Array.from(selectedZones).map(z => ZONE_LABELS[z]);
+        if (frost) zoneList.push('Mrożenie lakieru');
+        const summary = `Interesuje mnie wycena PPF.\nSegment: ${s.label}\nZakres: ${zoneList.join(', ') || '—'}\nOrientacyjna wycena ze strony: ${priceEl.textContent}`;
+        if (!msgEl.value.trim()) msgEl.value = summary;
+        if (carEl && !carEl.value.trim()) carEl.value = s.label;
+      }
+      if (kontakt) kontakt.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    update();
+  }
+
+  /* ---------- Przycisk szybkiego kontaktu ---------- */
+  const quickContact = document.getElementById('quickContact');
+  const quickToggle = document.getElementById('quickToggle');
+  if (quickContact && quickToggle) {
+    quickToggle.addEventListener('click', () => {
+      const open = quickContact.classList.toggle('open');
+      quickToggle.setAttribute('aria-expanded', String(open));
+    });
+    document.addEventListener('click', (e) => {
+      if (!quickContact.contains(e.target)) {
+        quickContact.classList.remove('open');
+        quickToggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        quickContact.classList.remove('open');
+        quickToggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+});
