@@ -85,7 +85,9 @@ document.addEventListener('DOMContentLoaded', () => {
     marqueeTrack.style.willChange = 'transform';
 
     const SPEED = 1.2;        // px/frame autoplay
-    const halfW = () => marqueeTrack.scrollWidth / 2;
+    let cachedHalfW = marqueeTrack.scrollWidth / 2;
+    const recalcHalfW = () => { cachedHalfW = marqueeTrack.scrollWidth / 2; };
+    window.addEventListener('resize', recalcHalfW, { passive: true });
 
     let x = 0;
     let dragging = false;
@@ -94,10 +96,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const tick = () => {
       if (!dragging) x -= SPEED;
-      // zawijaj: gdy wyjdziemy poza jedną kopię, skocz o halfW do przodu
-      const hw = halfW();
-      if (x < -hw) x += hw;
-      if (x > 0)   x -= hw;
+      // zawijaj: gdy wyjdziemy poza jedną kopię, skocz o cachedHalfW do przodu
+      if (x < -cachedHalfW) x += cachedHalfW;
+      if (x > 0)   x -= cachedHalfW;
       marqueeTrack.style.transform = `translateX(${x}px)`;
       requestAnimationFrame(tick);
     };
