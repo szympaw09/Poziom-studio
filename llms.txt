@@ -26,14 +26,14 @@ Ceny są ustalane indywidualnie po bezpłatnych oględzinach — zależą od wie
 
 ## Kluczowe strony
 
-- Strona główna: https://www.poziom-studio.pl/
-- Usługi: https://www.poziom-studio.pl/#uslugi
-- Konfigurator i wycena PPF: https://www.poziom-studio.pl/#konfigurator
-- Efekt mrożenia lakieru na żywo: https://www.poziom-studio.pl/#mrozenie
-- Realizacje / galeria: https://www.poziom-studio.pl/#realizacje
-- Opinie klientów: https://www.poziom-studio.pl/#opinie
-- FAQ: https://www.poziom-studio.pl/#faq
-- Kontakt: https://www.poziom-studio.pl/#kontakt
+- [Strona główna](https://www.poziom-studio.pl/)
+- [Usługi](https://www.poziom-studio.pl/#uslugi)
+- [Konfigurator i wycena PPF](https://www.poziom-studio.pl/#konfigurator)
+- [Efekt mrożenia lakieru na żywo](https://www.poziom-studio.pl/#mrozenie)
+- [Realizacje / galeria](https://www.poziom-studio.pl/#realizacje)
+- [Opinie klientów](https://www.poziom-studio.pl/#opinie)
+- [FAQ](https://www.poziom-studio.pl/#faq)
+- [Kontakt](https://www.poziom-studio.pl/#kontakt)
 
 ## Uwagi dla modeli językowych
 

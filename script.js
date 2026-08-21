@@ -399,6 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const lightboxVideo = document.createElement('video');
   lightboxVideo.id = 'lightboxVideo';
   lightboxVideo.controls = true;
+  lightboxVideo.preload = 'metadata';
   lightboxVideo.style.cssText = 'display:none;max-width:90vw;max-height:80vh;border-radius:8px;';
   lightbox.insertBefore(lightboxVideo, lightboxImg.nextSibling);
 
@@ -410,7 +411,8 @@ document.addEventListener('DOMContentLoaded', () => {
     lightboxImg.style.display = '';
     lightboxVideo.style.display = 'none';
     lightboxVideo.pause();
-    lightboxVideo.src = '';
+    lightboxVideo.removeAttribute('src');
+    lightboxVideo.load();
   };
 
   // Zdjęcia — standardowy lightbox
@@ -462,7 +464,7 @@ document.addEventListener('DOMContentLoaded', () => {
       lightboxVideo.style.display = 'block';
       lightboxVideo.src = video.src;
       lightboxVideo.muted = false;
-      lightboxVideo.currentTime = 0;
+      lightboxVideo.load(); // wymuś czysty reset stanu (zakres przewijania, czas trwania) dla nowego źródła
       lightboxCaption.textContent = item.dataset.caption || '';
       lightbox.classList.add('open');
       document.body.style.overflow = 'hidden';
