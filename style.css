@@ -123,6 +123,8 @@ input,textarea{ font-family:inherit; }
 }
 .btn-sm{ padding:.6rem 1.3rem; font-size:.85rem; }
 .btn-full{ width:100%; }
+.btn-normal-case{ text-transform:none; letter-spacing:normal; }
+.btn-bold-num{ font-weight:700; }
 
 .section{
   max-width:1240px;
