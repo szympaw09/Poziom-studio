@@ -941,6 +941,10 @@ input,textarea{ font-family:inherit; }
   .dual-feature{ grid-template-columns:1fr; grid-template-rows:none; gap:5rem; }
   .dual-feature-col.heal,
   .dual-feature-col.loupe{ display:flex; flex-direction:column; grid-row:auto; }
+  /* align-self:end miało sens w desktopowym subgrid (dosuwa do dołu rzędu) —
+     w flex-column na mobile ten sam align-self działa na osi poziomej i kurczy element w prawo. Reset: */
+  .dual-feature-col.heal #healBtn,
+  .dual-feature-col.loupe .loupe-cta{ align-self:stretch; }
 }
 
 /* =========================================================
