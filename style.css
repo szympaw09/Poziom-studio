@@ -997,7 +997,6 @@ input,textarea{ font-family:inherit; }
 }
 .loupe-hover-hint{
   display:none; cursor:default; pointer-events:none;
-  color:var(--ink-dim); font-weight:600;
 }
 @media (hover:hover){
   .loupe-hover-hint{ display:inline-flex; }
@@ -1016,7 +1015,7 @@ input,textarea{ font-family:inherit; }
 .loupe .section-head{ max-width:840px; margin-left:auto; margin-right:auto; }
 .loupe-desc{ margin-left:auto; margin-right:auto; }
 .loupe-wrap{ max-width:840px; margin-left:auto; margin-right:auto; }
-.loupe-mobile-btn, .loupe-hover-hint{ max-width:840px; margin-left:auto; margin-right:auto; }
+.loupe-mobile-btn, .loupe-hover-hint{ max-width:840px; width:100%; margin-left:auto; margin-right:auto; }
 
 /* =========================================================
    RESPONSIVE
